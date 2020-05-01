@@ -1,0 +1,22 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.30011.22
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LogisticRim", "LogisticRim.csproj", "{AC14ACC6-A9A5-4632-90DB-5EF10A7A48FE}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{AC14ACC6-A9A5-4632-90DB-5EF10A7A48FE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{AC14ACC6-A9A5-4632-90DB-5EF10A7A48FE}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {AC7FE218-9A94-47B7-AB47-0482FE6448F7}
+	EndGlobalSection
+EndGlobal
