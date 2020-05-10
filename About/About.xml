@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ModMetaData>
+
+	<name>LogisticRim</name>
+	<author>JonM0</author>
+	<supportedVersions>
+		<li>1.1</li>
+	</supportedVersions>
+
+	<packageId>JonM0.LogisticRim</packageId>
+
+	<url>
+	</url>
+	<description>
+	</description>
+
+	<modDependencies>
+		<!-- <li>
+			<packageId>brrainz.harmony</packageId>
+			<displayName>Harmony</displayName>
+			<steamWorkshopUrl>https://steamcommunity.com/sharedfiles/filedetails/?id=2009463077</steamWorkshopUrl>
+		</li> -->
+	</modDependencies>
+
+	<loadBefore>
+	</loadBefore>
+	<loadAfter>	
+		<li>brrainz.harmony</li>
+		<li>Ludeon.Rimworld</li>
+		<li>Ludeon.Rimworld.Royalty</li>
+		<li>UnlimitedHugs.HugsLib</li>
+	</loadAfter>
+	<incompatibleWith>
+		<li>Abraxas.MSERevived</li>
+	</incompatibleWith>
+
+</ModMetaData>
