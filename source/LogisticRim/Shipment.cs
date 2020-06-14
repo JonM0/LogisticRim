@@ -5,12 +5,16 @@ using Verse;
 
 namespace LogisticRim
 {
-    internal class Shipment : IExposable
+    public class Shipment : IExposable
     {
         public LogisticManager destination;
         public LogisticManager sender;
         public LogisticChannel channel;
         public List<ShipmentItem> items = new List<ShipmentItem>();
+
+        public Shipment ()
+        {
+        }
 
         public Shipment ( LogisticManager destination, LogisticManager sender, LogisticChannel channel )
         {
@@ -32,23 +36,50 @@ namespace LogisticRim
             }
         }
 
-        public void SetupPods ( List<CompTransporter> transporters )
+        public void SetupPods ()
         {
             // exit if status is not planned
 
             if ( this.Status != ShipmentStatus.Planned )
             {
-                Log.Error( "Can't setup pods for not planned shipment" );
+                Log.Error( "Can't setup pods for not planned shipment: " + this.Status.ToString() );
                 return;
             }
 
-            if ( transporters == null )
+            // find transporters
+
+            List<CompLogisticTransporter> logTransporters =
+                this.sender
+                .map.listerThings.ThingsInGroup( ThingRequestGroup.Transporter )
+                .Select( t => t.TryGetComp<CompLogisticTransporter>() )
+                .Where( t => t != null )
+                .Where( t => !t.Transporter.LoadingInProgressOrReadyToLaunch )
+                .ToList();
+
+            Log.Message( "Transporters found: " + logTransporters.Count );
+
+            if ( logTransporters.NullOrEmpty() )
             {
-                Log.Error( "Transporters cannot be null" );
+                Log.Error( "No transporters found" );
                 return;
             }
+
+            // choose which ones to use
+
+            logTransporters = logTransporters.GetRange( 0, 1 );
+
+            // initialize them
+
+            foreach ( var transporter in logTransporters )
+            {
+                transporter.shipmentInProgress = this;
+            }
+
+            List<CompTransporter> transporters = logTransporters.Select( t => t.Transporter ).ToList();
 
             TransporterUtility.InitiateLoading( transporters );
+
+            // distribute the items
 
             Dictionary<TransferableOneWay, int> tmpLeftCountToTransfer = new Dictionary<TransferableOneWay, int>();
 
@@ -108,7 +139,7 @@ namespace LogisticRim
 
         // status
 
-        internal enum ShipmentStatus
+        public enum ShipmentStatus
         {
             InCreation,
             Planned,
@@ -146,6 +177,7 @@ namespace LogisticRim
                         break;
 
                     case ShipmentStatus.InTransit:
+                        this.sender.shipmentsInTransit.Add( this );
                         break;
 
                     case ShipmentStatus.Complete:
@@ -171,6 +203,7 @@ namespace LogisticRim
                         break;
 
                     case ShipmentStatus.InTransit:
+                        this.sender.shipmentsInTransit.Remove( this );
                         break;
 
                     case ShipmentStatus.Complete:

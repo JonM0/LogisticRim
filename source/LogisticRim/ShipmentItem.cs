@@ -8,8 +8,12 @@ using Verse;
 
 namespace LogisticRim
 {
-    internal class ShipmentItem : IExposable
+    public class ShipmentItem : IExposable
     {
+        public ShipmentItem ()
+        {
+        }
+
         public LogisticRequester requester;
         public LogisticManager sender;
 

@@ -24,45 +24,7 @@ namespace LogisticRim.DebugTools
 
                 Log.Message( shipments.Count + " shipments generated." );
 
-                Find.WindowStack.Add( new Dialog_DebugOptionListLister( ViewShipments( shipments ) ) );
-            }
-        }
-
-        private static IEnumerable<DebugMenuOption> ViewShipments ( List<Shipment> shipments )
-        {
-            foreach ( var shipment in shipments )
-            {
-                yield return new DebugMenuOption
-                {
-                    label = "View destination: " + shipment.destination.map.GetUniqueLoadID(),
-                    method = () =>
-                    {
-                        IEnumerable<ShipmentItem> dataSources =
-                            shipment.items;
-
-                        TableDataGetter<ShipmentItem>[] array = new TableDataGetter<ShipmentItem>[3];
-                        array[0] = new TableDataGetter<ShipmentItem>( "thingDef", ( ShipmentItem r ) => r.requester.ThingDef );
-                        array[1] = new TableDataGetter<ShipmentItem>( "amount", ( ShipmentItem r ) => r.Count );// thingCounts.Select( tc => tc.Count ).Aggregate( ( a, b ) => a + b ) ) ;
-                        array[2] = new TableDataGetter<ShipmentItem>( "requested", ( ShipmentItem r ) => r.reqAmount );
-
-                        DebugTables.MakeTablesDialog( dataSources, array );
-                    },
-                    mode = DebugMenuOptionMode.Action,
-                };
-
-                yield return new DebugMenuOption
-                {
-                    label = "Send to destination: " + shipment.destination.map.GetUniqueLoadID(),
-                    method = () =>
-                    {
-                        List<CompTransporter> transporters = new List<CompTransporter>();
-
-                        TransporterUtility.GetTransportersInGroup( -1, shipment.sender.map, transporters );
-
-                        shipment.SetupPods( transporters );
-                    },
-                    mode = DebugMenuOptionMode.Action,
-                };
+                Find.WindowStack.Add( new Dialog_DebugOptionListLister( ExecuteShipments.ViewShipments( shipments ) ) );
             }
         }
     }

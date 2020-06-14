@@ -8,7 +8,7 @@ using RimWorld;
 
 namespace LogisticRim
 {
-    internal class LogisticManager : MapComponent, ILoadReferenceable
+    public class LogisticManager : MapComponent, ILoadReferenceable
     {
         public List<LogisticInterface> interfaces = new List<LogisticInterface>();
 
@@ -123,9 +123,10 @@ namespace LogisticRim
 
         // active shipments
 
-        public ICollection<Shipment> shipmentsPlanned = new HashSet<Shipment>();
-        public ICollection<Shipment> shipmentsLoading = new HashSet<Shipment>();
-        public ICollection<Shipment> shipmentsReady = new HashSet<Shipment>();
+        public HashSet<Shipment> shipmentsPlanned = new HashSet<Shipment>();
+        public HashSet<Shipment> shipmentsLoading = new HashSet<Shipment>();
+        public HashSet<Shipment> shipmentsReady = new HashSet<Shipment>();
+        public HashSet<Shipment> shipmentsInTransit = new HashSet<Shipment>();
 
         // save load
 
@@ -139,6 +140,11 @@ namespace LogisticRim
 
             Scribe_Values.Look( ref ticksLastDeliveryScan, "ticksLastDeliveryScan" );
             Scribe_Values.Look( ref deliveryScanInterval, "deliveryScanInterval" );
+
+            Scribe_Collections.Look( ref shipmentsPlanned, "shipmentsPlanned", LookMode.Deep );
+            Scribe_Collections.Look( ref shipmentsLoading, "shipmentsLoading", LookMode.Deep );
+            Scribe_Collections.Look( ref shipmentsReady, "shipmentsReady", LookMode.Deep );
+            Scribe_Collections.Look( ref shipmentsInTransit, "shipmentsInTransit", LookMode.Deep );
         }
 
         private int nextInterfaceID;

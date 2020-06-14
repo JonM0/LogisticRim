@@ -7,13 +7,13 @@ using Verse;
 
 namespace LogisticRim
 {
-    internal class LogisticProviderPassive : LogisticInterface
+    public class LogisticProviderPassive : LogisticInterface
     {
         public ThingFilter thingFilter = new ThingFilter();
 
         public FilterMode mode = FilterMode.Whitelist;
 
-        internal enum FilterMode
+        public enum FilterMode
         {
             Whitelist,
             Blacklist

@@ -8,7 +8,7 @@ using Verse;
 
 namespace LogisticRim
 {
-    internal class LogisticChannels : GameComponent
+    public class LogisticChannels : GameComponent
     {
         public HashSet<LogisticChannel> channels = new HashSet<LogisticChannel>();
 

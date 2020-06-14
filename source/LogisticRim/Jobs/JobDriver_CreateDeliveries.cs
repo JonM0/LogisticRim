@@ -5,7 +5,7 @@ using Verse.AI;
 
 namespace LogisticRim
 {
-    internal class JobDriver_CreateDeliveries : JobDriver
+    public class JobDriver_CreateDeliveries : JobDriver
     {
         protected float BaseWorkAmount
         {

@@ -5,7 +5,7 @@ using Verse;
 
 namespace LogisticRim
 {
-    internal class LogisticRequester : LogisticInterface
+    public class LogisticRequester : LogisticInterface
     {
         private ThingDefCountClass request;
 

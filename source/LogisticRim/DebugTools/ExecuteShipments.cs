@@ -28,7 +28,7 @@ namespace LogisticRim.DebugTools
             }
         }
 
-        private static IEnumerable<DebugMenuOption> ViewShipments ( List<Shipment> shipments )
+        internal static IEnumerable<DebugMenuOption> ViewShipments ( List<Shipment> shipments )
         {
             foreach ( var shipment in shipments )
             {
@@ -55,17 +55,17 @@ namespace LogisticRim.DebugTools
                     label = "Send to destination: " + shipment.destination.map.GetUniqueLoadID(),
                     method = () =>
                     {
-                        List<CompTransporter> transporters =
-                            shipment.sender
-                            .map.listerThings.ThingsInGroup( ThingRequestGroup.Transporter )
-                            .Select( t => t.TryGetComp<CompTransporter>() )
-                            .ToList();
+                        shipment.SetupPods();
+                    },
+                    mode = DebugMenuOptionMode.Action,
+                };
 
-                        //TransporterUtility.GetTransportersInGroup( -1, map, transporters );
-
-                        Log.Message( "Transporters found: " + transporters.Count );
-
-                        shipment.SetupPods( transporters );
+                yield return new DebugMenuOption
+                {
+                    label = "Delete: " + shipment.destination.map.GetUniqueLoadID(),
+                    method = () =>
+                    {
+                        shipment.Status = Shipment.ShipmentStatus.Complete;
                     },
                     mode = DebugMenuOptionMode.Action,
                 };

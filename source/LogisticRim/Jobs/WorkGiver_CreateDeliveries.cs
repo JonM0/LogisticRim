@@ -9,7 +9,7 @@ using Verse.AI;
 
 namespace LogisticRim
 {
-    internal class WorkGiver_CreateDeliveries : WorkGiver_Scanner
+    public class WorkGiver_CreateDeliveries : WorkGiver_Scanner
     {
         public override Job JobOnThing ( Pawn pawn, Thing t, bool forced = false )
         {

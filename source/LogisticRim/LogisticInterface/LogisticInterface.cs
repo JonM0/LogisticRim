@@ -7,7 +7,7 @@ using Verse;
 
 namespace LogisticRim
 {
-    internal abstract class LogisticInterface : IExposable, ILoadReferenceable
+    public abstract class LogisticInterface : IExposable, ILoadReferenceable
     {
         protected LogisticInterface ( LogisticChannel channel )
         {

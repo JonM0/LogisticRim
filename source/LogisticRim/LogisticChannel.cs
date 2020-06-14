@@ -8,7 +8,7 @@ using Verse;
 
 namespace LogisticRim
 {
-    internal class LogisticChannel : IExposable, ILoadReferenceable
+    public class LogisticChannel : IExposable, ILoadReferenceable
     {
         public LogisticChannel ( string name )
         {
@@ -61,7 +61,8 @@ namespace LogisticRim
             get =>
                 this.Managers.SelectMany( m => m.shipmentsLoading )
                 .Concat( this.Managers.SelectMany( m => m.shipmentsPlanned ) )
-                .Concat( this.Managers.SelectMany( m => m.shipmentsReady ) );
+                .Concat( this.Managers.SelectMany( m => m.shipmentsReady ) )
+                .Concat( this.Managers.SelectMany( m => m.shipmentsInTransit ) );
         }
 
         public string GetUniqueLoadID ()
