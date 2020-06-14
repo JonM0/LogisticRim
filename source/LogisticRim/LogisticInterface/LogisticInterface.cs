@@ -28,8 +28,8 @@ namespace LogisticRim
         public void Remove ()
         {
             manager.interfaces.Remove( this );
-            channel.interfaces.Remove( this );
             manager = null;
+            channel.interfaces.Remove( this );
             channel = null;
         }
 

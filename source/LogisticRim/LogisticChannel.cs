@@ -56,7 +56,13 @@ namespace LogisticRim
 
         public static HashSet<LogisticChannel> AllChannels => Current.Game.GetComponent<LogisticChannels>().channels;
 
-        public List<Shipment> activeShipments = new List<Shipment>();
+        public IEnumerable<Shipment> ActiveShipments
+        {
+            get =>
+                this.Managers.SelectMany( m => m.shipmentsLoading )
+                .Concat( this.Managers.SelectMany( m => m.shipmentsPlanned ) )
+                .Concat( this.Managers.SelectMany( m => m.shipmentsReady ) );
+        }
 
         public string GetUniqueLoadID ()
         {

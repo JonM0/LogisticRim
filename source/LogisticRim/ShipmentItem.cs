@@ -13,77 +13,24 @@ namespace LogisticRim
         public LogisticRequester requester;
         public LogisticManager sender;
 
-        private int count = 0;
-        public HashSet<Thing> things = new HashSet<Thing>();
-        public List<ThingCountClass> thingCounts = new List<ThingCountClass>();
+        public TransferableOneWay transferableThings = new TransferableOneWay();
+        public int reqAmount;
 
-        public int Count => this.count;
+        public int Count => this.transferableThings.CountToTransfer;
 
-        public bool InsertThing ( Thing thing )
+        public bool TryInsertThing ( Thing thing )
         {
-            if ( requester.ThingDef != thing.def )
+            if ( requester.CanAcceptThing( thing ) )
             {
-                Log.Error( "[LogisticRim] Tried to add " + thing.Label + " to shipment of " + requester.ThingDef.defName );
-                return false;
+                transferableThings.things.Add( thing );
+
+                transferableThings.AdjustTo( this.reqAmount );
+
+                return true;
             }
             else
             {
-                if ( requester.Missing - count > 0 && things.Add( thing ) )
-                {
-                    int take = Math.Min( thing.stackCount, requester.Missing - count );
-                    count += take;
-                    thingCounts.Add( new ThingCountClass( thing, take ) );
-
-                    return true;
-                }
-                else
-                {
-                    return false;
-                }
-            }
-        }
-
-        public void Execute ( List<ActiveDropPodInfo> dropPodList )
-        {
-            ActiveDropPodInfo pod = dropPodList.LastOrDefault();
-
-            foreach ( var item in thingCounts )
-            {
-                int count = item.Count;
-
-                while ( count > 0 )
-                {
-                    if ( pod == null )
-                    {
-                        pod = new ActiveDropPodInfo();
-                        dropPodList.Add( pod );
-                    }
-
-                    int canAccept = pod.innerContainer.GetCountCanAccept( item.thing );
-
-                    canAccept = Math.Min( canAccept, count );
-
-                    if ( canAccept == 0 )
-                    {
-                        ActiveDropPodInfo newPod = new ActiveDropPodInfo();
-
-                        canAccept = newPod.innerContainer.GetCountCanAccept( item.thing );
-                        canAccept = Math.Min( canAccept, count );
-
-                        if ( canAccept == 0 )
-                            break;
-                        else
-                            pod = newPod;
-                    }
-
-                    bool success = pod.innerContainer.TryAdd( item.thing.SplitOff( canAccept ) );
-
-                    if ( success )
-                    {
-                        Log.Message( item.thing.Label + " " + count );
-                        count -= canAccept;
-                    }
-                }
+                return false;
             }
         }
 
@@ -91,16 +38,16 @@ namespace LogisticRim
         {
             Scribe_References.Look( ref requester, "requester" );
             Scribe_References.Look( ref sender, "sender" );
-            Scribe_Values.Look( ref count, "count" );
 
-            Scribe_Collections.Look( ref things, "things", LookMode.Reference );
-            Scribe_Collections.Look( ref thingCounts, "thingCounts", LookMode.Deep );
+            Scribe_Deep.Look( ref transferableThings, "transferableThings" );
+            Scribe_Values.Look( ref reqAmount, "reqAmount" );
         }
 
-        public ShipmentItem ( LogisticRequester requester, LogisticManager sender )
+        public ShipmentItem ( LogisticRequester requester, LogisticManager sender, int amount )
         {
             this.requester = requester;
             this.sender = sender;
+            this.reqAmount = amount;
         }
 
         public bool Empty => this.Count == 0;

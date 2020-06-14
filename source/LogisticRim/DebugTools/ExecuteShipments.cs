@@ -22,7 +22,7 @@ namespace LogisticRim.DebugTools
             else
             {
                 List<Shipment> shipments = new List<Shipment>();
-                shipments.AddRange( Manager.Channels.SelectMany( c => c.activeShipments ) );
+                shipments.AddRange( Manager.Channels.SelectMany( c => c.ActiveShipments ) );
 
                 Find.WindowStack.Add( new Dialog_DebugOptionListLister( ViewShipments( shipments ) ) );
             }
@@ -43,7 +43,7 @@ namespace LogisticRim.DebugTools
                         TableDataGetter<ShipmentItem>[] array = new TableDataGetter<ShipmentItem>[3];
                         array[0] = new TableDataGetter<ShipmentItem>( "thingDef", ( ShipmentItem r ) => r.requester.ThingDef );
                         array[1] = new TableDataGetter<ShipmentItem>( "amount", ( ShipmentItem r ) => r.Count );// thingCounts.Select( tc => tc.Count ).Aggregate( ( a, b ) => a + b ) ) ;
-                        array[2] = new TableDataGetter<ShipmentItem>( "requested", ( ShipmentItem r ) => r.requester.Missing );
+                        array[2] = new TableDataGetter<ShipmentItem>( "requested", ( ShipmentItem r ) => r.reqAmount );
 
                         DebugTables.MakeTablesDialog( dataSources, array );
                     },
@@ -55,7 +55,17 @@ namespace LogisticRim.DebugTools
                     label = "Send to destination: " + shipment.destination.map.GetUniqueLoadID(),
                     method = () =>
                     {
-                        shipment.Execute();
+                        List<CompTransporter> transporters =
+                            shipment.sender
+                            .map.listerThings.ThingsInGroup( ThingRequestGroup.Transporter )
+                            .Select( t => t.TryGetComp<CompTransporter>() )
+                            .ToList();
+
+                        //TransporterUtility.GetTransportersInGroup( -1, map, transporters );
+
+                        Log.Message( "Transporters found: " + transporters.Count );
+
+                        shipment.SetupPods( transporters );
                     },
                     mode = DebugMenuOptionMode.Action,
                 };

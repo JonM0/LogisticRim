@@ -43,7 +43,7 @@ namespace LogisticRim.DebugTools
                         TableDataGetter<ShipmentItem>[] array = new TableDataGetter<ShipmentItem>[3];
                         array[0] = new TableDataGetter<ShipmentItem>( "thingDef", ( ShipmentItem r ) => r.requester.ThingDef );
                         array[1] = new TableDataGetter<ShipmentItem>( "amount", ( ShipmentItem r ) => r.Count );// thingCounts.Select( tc => tc.Count ).Aggregate( ( a, b ) => a + b ) ) ;
-                        array[2] = new TableDataGetter<ShipmentItem>( "requested", ( ShipmentItem r ) => r.requester.Missing );
+                        array[2] = new TableDataGetter<ShipmentItem>( "requested", ( ShipmentItem r ) => r.reqAmount );
 
                         DebugTables.MakeTablesDialog( dataSources, array );
                     },
@@ -55,7 +55,11 @@ namespace LogisticRim.DebugTools
                     label = "Send to destination: " + shipment.destination.map.GetUniqueLoadID(),
                     method = () =>
                     {
-                        shipment.Execute();
+                        List<CompTransporter> transporters = new List<CompTransporter>();
+
+                        TransporterUtility.GetTransportersInGroup( -1, shipment.sender.map, transporters );
+
+                        shipment.SetupPods( transporters );
                     },
                     mode = DebugMenuOptionMode.Action,
                 };

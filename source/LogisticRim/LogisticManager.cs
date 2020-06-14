@@ -21,7 +21,7 @@ namespace LogisticRim
             interfaces.Add( lInterface );
             lInterface.manager = this;
 
-            lInterface.loadid = this.GetUniqueLoadID() + "_" + (++rollingLoadId);
+            lInterface.loadid = this.GetUniqueLoadID() + "_" + (nextInterfaceID++);
         }
 
         public IEnumerable<LogisticChannel> Channels
@@ -71,7 +71,9 @@ namespace LogisticRim
 
             foreach ( var shipment in this.GenerateOutgoingShipments() )
             {
-                shipment.channel.activeShipments.Add( shipment );
+                shipment.Status = Shipment.ShipmentStatus.Planned;
+
+                Log.Message( "Shipment planned" );
             }
 
             Log.Message( "Scan completed" );
@@ -87,13 +89,35 @@ namespace LogisticRim
                 {
                     Log.Message( "generating shipments for map " + reqGroup.Key.map.GetUniqueLoadID() );
 
-                    Shipment shipment = new Shipment( reqGroup.Key, this, channel );
-                    shipment.AddAllShippable( this.ThingsProvided( channel ), reqGroup );
-                    if ( !shipment.IsEmpty )
+                    Shipment shipment = reqGroup.Key.GenerateRequest( this, channel );
+
+                    if ( shipment != null )
                     {
                         yield return shipment;
                     }
                 }
+            }
+        }
+
+        public Shipment GenerateRequest ( LogisticManager sender, LogisticChannel channel )
+        {
+            Shipment shipment = new Shipment( this, sender, channel );
+
+            foreach ( LogisticRequester requester in this.Requesters.Where( x => x.channel == channel ) )
+            {
+                var item = requester.CreateShipment( sender );
+                if ( item.reqAmount > 0 )
+                    shipment.items.Add( item );
+            }
+
+            if ( shipment.items.Any() )
+            {
+                shipment.AddAllShippable();
+                return shipment;
+            }
+            else
+            {
+                return null;
             }
         }
 
@@ -111,13 +135,13 @@ namespace LogisticRim
 
             Scribe_Collections.Look( ref interfaces, "interfaces", LookMode.Deep );
 
-            Scribe_Values.Look( ref rollingLoadId, "rlID" );
+            Scribe_Values.Look( ref nextInterfaceID, "nextInterfaceID" );
 
             Scribe_Values.Look( ref ticksLastDeliveryScan, "ticksLastDeliveryScan" );
             Scribe_Values.Look( ref deliveryScanInterval, "deliveryScanInterval" );
         }
 
-        private int rollingLoadId;
+        private int nextInterfaceID;
 
         public string GetUniqueLoadID ()
         {
@@ -128,7 +152,7 @@ namespace LogisticRim
         {
             base.MapGenerated();
 
-            rollingLoadId = 0;
+            nextInterfaceID = 0;
         }
 
         public override void MapRemoved ()

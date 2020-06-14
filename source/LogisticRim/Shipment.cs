@@ -1,5 +1,6 @@
 ﻿using RimWorld;
 using System.Collections.Generic;
+using System.Linq;
 using Verse;
 
 namespace LogisticRim
@@ -16,55 +17,80 @@ namespace LogisticRim
             this.destination = destination;
             this.sender = sender;
             this.channel = channel;
+
+            this.Status = ShipmentStatus.InCreation;
         }
 
-        public bool TryGetShipmentItemForDef ( ThingDef thingDef, LogisticRequester requester, out ShipmentItem item )
+        public void AddAllShippable ()
         {
-            item = this.items.Find( i => i.requester.ThingDef == thingDef && i.requester == requester );
-            return item != null;
-        }
-
-        public void AddItem ( LogisticRequester requester, Thing thing )
-        {
-            if ( this.TryGetShipmentItemForDef( thing.def, requester, out ShipmentItem item ) )
+            foreach ( var thing in sender.ThingsProvided( this.channel ) )
             {
-                item.InsertThing( thing );
-            }
-            else
-            {
-                ShipmentItem newItem = new ShipmentItem( requester, this.sender );
-                newItem.InsertThing( thing );
-                this.items.Add( newItem );
-            }
-        }
-
-        public void AddAllShippable ( IEnumerable<Thing> source, IEnumerable<LogisticRequester> requesters )
-        {
-            foreach ( var thing in source )
-            {
-                foreach ( var requester in requesters )
+                foreach ( var shipmentItem in items )
                 {
-                    if ( requester.CanAcceptThing( thing ) )
-                    {
-                        this.AddItem( requester, thing );
-                    }
+                    shipmentItem.TryInsertThing( thing );
                 }
             }
         }
 
-        public void Execute ()
+        public void SetupPods ( List<CompTransporter> transporters )
         {
-            List<ActiveDropPodInfo> pods = new List<ActiveDropPodInfo>();
+            // exit if status is not planned
 
-            foreach ( var item in this.items )
+            if ( this.Status != ShipmentStatus.Planned )
             {
-                item.Execute( pods );
+                Log.Error( "Can't setup pods for not planned shipment" );
+                return;
             }
 
-            foreach ( var pod in pods )
+            if ( transporters == null )
             {
-                DropPodUtility.MakeDropPodAt( this.destination.map.Center, this.destination.map, pod );
+                Log.Error( "Transporters cannot be null" );
+                return;
             }
+
+            TransporterUtility.InitiateLoading( transporters );
+
+            Dictionary<TransferableOneWay, int> tmpLeftCountToTransfer = new Dictionary<TransferableOneWay, int>();
+
+            foreach ( var item in items )
+            {
+                tmpLeftCountToTransfer.Add( item.transferableThings, item.Count );
+            }
+
+            TransferableOneWay biggestTransferable = this.items.Select( i => i.transferableThings ).MaxBy( ( TransferableOneWay x ) => tmpLeftCountToTransfer[x] );
+
+            int transporterIndex = 0;
+            // load all but the biggest
+            foreach ( var transferable in this.items.Select( i => i.transferableThings ) )
+            {
+                if ( transferable != biggestTransferable && tmpLeftCountToTransfer[transferable] > 0 )
+                {
+                    transporters[transporterIndex % transporters.Count].AddToTheToLoadList( transferable, tmpLeftCountToTransfer[transferable] );
+                    transporterIndex++;
+                }
+            }
+            // if there are empty pods distribute the biggest among the remaining
+            if ( transporterIndex < transporters.Count )
+            {
+                int amountToDistribute = tmpLeftCountToTransfer[biggestTransferable];
+                int amountEach = amountToDistribute / (transporters.Count - transporterIndex);
+                for ( int m = transporterIndex; m < transporters.Count; m++ )
+                {
+                    int amountAdded = (m == transporters.Count - 1) ? amountToDistribute : amountEach; // on the last one add all the remaining
+                    if ( amountAdded > 0 )
+                    {
+                        transporters[m].AddToTheToLoadList( biggestTransferable, amountAdded );
+                    }
+                    amountToDistribute -= amountAdded;
+                }
+            }
+            // else just add it to one
+            else
+            {
+                transporters[transporterIndex % transporters.Count].AddToTheToLoadList( biggestTransferable, tmpLeftCountToTransfer[biggestTransferable] );
+            }
+
+            this.Status = ShipmentStatus.InLoading;
         }
 
         public void ExposeData ()
@@ -84,6 +110,7 @@ namespace LogisticRim
 
         internal enum ShipmentStatus
         {
+            InCreation,
             Planned,
             InLoading,
             ReadyToLaunch,
@@ -122,7 +149,6 @@ namespace LogisticRim
                         break;
 
                     case ShipmentStatus.Complete:
-                        this.channel.activeShipments.Remove( this );
                         break;
 
                     default:
@@ -155,7 +181,6 @@ namespace LogisticRim
                 }
 
                 this.status = value;
-
             }
         }
     }

@@ -62,7 +62,6 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="DebugTools\CreateLogisticManager.cs" />
     <Compile Include="DebugTools\DebugOutputs.cs" />
     <Compile Include="DebugTools\ExecuteShipments.cs" />
     <Compile Include="DebugTools\GenerateShipments.cs" />
@@ -79,6 +78,8 @@
     <Compile Include="Shipment.cs" />
     <Compile Include="ShipmentItem.cs" />
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <Folder Include="CompLogisticTansport\" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

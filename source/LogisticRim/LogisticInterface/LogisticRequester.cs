@@ -44,7 +44,7 @@ namespace LogisticRim
 
                 if ( this.request.count > 0 )
                 {
-                    var list = this.channel.activeShipments.SelectMany( s => s.items ).Where( s => s.requester == this );
+                    var list = this.channel.ActiveShipments.SelectMany( s => s.items ).Where( s => s.requester == this );
 
                     foreach ( var e in list )
                     {
@@ -71,7 +71,7 @@ namespace LogisticRim
             {
                 int planned = 0;
 
-                var list = this.channel.activeShipments.SelectMany( s => s.items ).Where( s => s.requester == this );
+                var list = this.channel.ActiveShipments.SelectMany( s => s.items ).Where( s => s.requester == this );
 
                 foreach ( var e in list )
                 {
@@ -87,17 +87,10 @@ namespace LogisticRim
             return thing.def == this.ThingDef;
         }
 
-        //public IEnumerable<Thing> SendableFrom ( LogisticManager manager )
-        //{
-        //    int missing = this.Missing;
-        //    foreach ( var thing in manager.ThingsProvided( this.channel ) )
-        //    {
-        //        if ( thing.def == this.request.thingDef && missing > 0 )
-        //        {
-        //            yield return thing;
-        //        }
-        //    }
-        //}
+        public ShipmentItem CreateShipment ( LogisticManager sender )
+        {
+            return new ShipmentItem( this, sender, this.Missing );
+        }
 
         override public void ExposeData ()
         {
