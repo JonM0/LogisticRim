@@ -5,7 +5,7 @@ using Verse;
 
 namespace LogisticRim
 {
-    public class Shipment : IExposable
+    public class Shipment : IExposable, ILoadReferenceable
     {
         public LogisticManager destination;
         public LogisticManager sender;
@@ -23,6 +23,8 @@ namespace LogisticRim
             this.channel = channel;
 
             this.Status = ShipmentStatus.InCreation;
+
+            this.id = sender.GetUniqueLoadID() + "_shipment" + sender.GetNextShipmentID();
         }
 
         public void AddAllShippable ()
@@ -46,21 +48,19 @@ namespace LogisticRim
                 return;
             }
 
+            List<TransferableOneWay> transferables = items.Select( t => t.transferableThings ).ToList();
+
             // find transporters
 
             List<CompLogisticTransporter> logTransporters =
                 this.sender
-                .map.listerThings.ThingsInGroup( ThingRequestGroup.Transporter )
-                .Select( t => t.TryGetComp<CompLogisticTransporter>() )
-                .Where( t => t != null )
-                .Where( t => !t.Transporter.LoadingInProgressOrReadyToLaunch )
-                .ToList();
+                .TransportersForMassAndDistance( CollectionsMassCalculator.MassUsageTransferables( transferables, IgnorePawnsInventoryMode.Ignore ), this.destination.map.Tile );
 
             Log.Message( "Transporters found: " + logTransporters.Count );
 
             if ( logTransporters.NullOrEmpty() )
             {
-                Log.Error( "No transporters found" );
+                Log.Message( "No transporters found" );
                 return;
             }
 
@@ -79,50 +79,14 @@ namespace LogisticRim
 
             TransporterUtility.InitiateLoading( transporters );
 
-            // distribute the items
-
-            Dictionary<TransferableOneWay, int> tmpLeftCountToTransfer = new Dictionary<TransferableOneWay, int>();
-
-            foreach ( var item in items )
-            {
-                tmpLeftCountToTransfer.Add( item.transferableThings, item.Count );
-            }
-
-            TransferableOneWay biggestTransferable = this.items.Select( i => i.transferableThings ).MaxBy( ( TransferableOneWay x ) => tmpLeftCountToTransfer[x] );
-
-            int transporterIndex = 0;
-            // load all but the biggest
-            foreach ( var transferable in this.items.Select( i => i.transferableThings ) )
-            {
-                if ( transferable != biggestTransferable && tmpLeftCountToTransfer[transferable] > 0 )
-                {
-                    transporters[transporterIndex % transporters.Count].AddToTheToLoadList( transferable, tmpLeftCountToTransfer[transferable] );
-                    transporterIndex++;
-                }
-            }
-            // if there are empty pods distribute the biggest among the remaining
-            if ( transporterIndex < transporters.Count )
-            {
-                int amountToDistribute = tmpLeftCountToTransfer[biggestTransferable];
-                int amountEach = amountToDistribute / (transporters.Count - transporterIndex);
-                for ( int m = transporterIndex; m < transporters.Count; m++ )
-                {
-                    int amountAdded = (m == transporters.Count - 1) ? amountToDistribute : amountEach; // on the last one add all the remaining
-                    if ( amountAdded > 0 )
-                    {
-                        transporters[m].AddToTheToLoadList( biggestTransferable, amountAdded );
-                    }
-                    amountToDistribute -= amountAdded;
-                }
-            }
-            // else just add it to one
-            else
-            {
-                transporters[transporterIndex % transporters.Count].AddToTheToLoadList( biggestTransferable, tmpLeftCountToTransfer[biggestTransferable] );
-            }
+            LogTransporterUtility.DistributeItems( transferables, transporters );
 
             this.Status = ShipmentStatus.InLoading;
         }
+
+        public bool IsEmpty => this.items.NullOrEmpty() || this.items.TrueForAll( i => i.Empty );
+
+        // save load
 
         public void ExposeData ()
         {
@@ -133,9 +97,16 @@ namespace LogisticRim
             Scribe_Collections.Look( ref this.items, "items", LookMode.Deep );
 
             Scribe_Values.Look( ref this.status, "status" );
+
+            Scribe_Values.Look( ref this.id, "id" );
         }
 
-        public bool IsEmpty => this.items.NullOrEmpty() || this.items.TrueForAll( i => i.Empty );
+        private string id;
+
+        public string GetUniqueLoadID ()
+        {
+            return id;
+        }
 
         // status
 

@@ -60,6 +60,18 @@
       <HintPath>..\..\..\..\RimWorldWin64_Data\Managed\UnityEngine.CoreModule.dll</HintPath>
       <Private>False</Private>
     </Reference>
+    <Reference Include="UnityEngine.IMGUIModule">
+      <HintPath>..\..\..\..\RimWorldWin64_Data\Managed\UnityEngine.IMGUIModule.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="UnityEngine.TextCoreModule">
+      <HintPath>..\..\..\..\RimWorldWin64_Data\Managed\UnityEngine.TextCoreModule.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="UnityEngine.TextRenderingModule">
+      <HintPath>..\..\..\..\RimWorldWin64_Data\Managed\UnityEngine.TextRenderingModule.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="CompLogisticTansport\CompLogisticTransporter.cs" />
@@ -77,10 +89,12 @@
     <Compile Include="LogisticManager.cs" />
     <Compile Include="LogisticInterface\LogisticProviderPassive.cs" />
     <Compile Include="LogisticInterface\LogisticRequester.cs" />
+    <Compile Include="UI\MainTabWindow_Logistics.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Shipment.cs" />
     <Compile Include="ShipmentItem.cs" />
-    <Compile Include="TransportPodsArrivalAction_FinalizeShipment.cs" />
+    <Compile Include="CompLogisticTansport\TransportPodsArrivalAction_FinalizeShipment.cs" />
+    <Compile Include="UI\LogWidgets.cs" />
   </ItemGroup>
   <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

@@ -47,5 +47,12 @@ namespace LogisticRim
         {
             this.shipment = shipment;
         }
+
+        public override void ExposeData ()
+        {
+            base.ExposeData();
+
+            Scribe_References.Look( ref this.shipment, "shipment" );
+        }
     }
 }

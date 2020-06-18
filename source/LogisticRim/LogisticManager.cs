@@ -1,10 +1,7 @@
-﻿using System;
+﻿using HarmonyLib;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using Verse;
-using RimWorld;
 
 namespace LogisticRim
 {
@@ -18,16 +15,16 @@ namespace LogisticRim
 
         public void AddInterface ( LogisticInterface lInterface )
         {
-            interfaces.Add( lInterface );
+            this.interfaces.Add( lInterface );
             lInterface.manager = this;
 
-            lInterface.loadid = this.GetUniqueLoadID() + "_" + (nextInterfaceID++);
+            lInterface.loadid = this.GetUniqueLoadID() + "_" + (this.nextInterfaceID++);
         }
 
         public IEnumerable<LogisticChannel> Channels
         {
             get =>
-                from i in interfaces
+                from i in this.interfaces
                 group i by i.channel into g
                 select g.Key;
         }
@@ -35,23 +32,53 @@ namespace LogisticRim
         public IEnumerable<LogisticProviderPassive> PassiveProviders
         {
             get =>
-                interfaces.Select( i => i as LogisticProviderPassive )
+                this.interfaces.Select( i => i as LogisticProviderPassive )
                 .Where( p => p != null );
         }
 
         public IEnumerable<LogisticRequester> Requesters
         {
             get =>
-                interfaces.Select( i => i as LogisticRequester )
+                this.interfaces.Select( i => i as LogisticRequester )
                 .Where( p => p != null );
         }
 
         public IEnumerable<Thing> ThingsProvided ( LogisticChannel channel )
         {
-            return from thing in map.listerThings.ThingsInGroup( ThingRequestGroup.HaulableEver )
-                   from provider in PassiveProviders
+            return from thing in this.map.listerThings.ThingsInGroup( ThingRequestGroup.HaulableEver )
+                   from provider in this.PassiveProviders
                    where provider.Allows( thing )
                    select thing;
+        }
+
+        // transporters
+
+        public List<CompLogisticTransporter> transporters = new List<CompLogisticTransporter>();
+
+        public IEnumerable<CompLogisticTransporter> AvailableTransporters
+        {
+            get => transporters.Where( t => t.Available );
+        }
+
+        public List<CompLogisticTransporter> TransportersForMassAndDistance ( float mass, int tile )
+        {
+            float totMass = 0;
+            List<CompLogisticTransporter> res = new List<CompLogisticTransporter>();
+            int distance = Find.WorldGrid.TraversalDistanceBetween( this.map.Tile, tile, true, int.MaxValue );
+
+            foreach ( var transporter in AvailableTransporters )
+            {
+                if ( transporter.MaxLaunchDistance >= distance )
+                {
+                    totMass += transporter.Transporter.Props.massCapacity;
+                    res.Add( transporter );
+
+                    if ( totMass >= mass )
+                        return res;
+                }
+            }
+
+            return null;
         }
 
         // shipment generation
@@ -67,6 +94,12 @@ namespace LogisticRim
         public void Scan ()
         {
             this.ticksLastDeliveryScan = Find.TickManager.TicksGame;
+
+            foreach ( var requester in this.Requesters )
+            {
+                requester.UpdateRequest();
+            }
+
             Log.Message( "shipments: " + this.Channels.Count() + " channels, " + this.Channels.SelectMany( c => c.Requesters ).Count() + " requesters" );
 
             foreach ( var shipment in this.GenerateOutgoingShipments() )
@@ -121,6 +154,20 @@ namespace LogisticRim
             }
         }
 
+        public override void MapComponentTick ()
+        {
+            if ( Find.TickManager.TicksGame % 719 == 0 )
+            {
+                base.MapComponentTick();
+
+                foreach ( var shipment in this.shipmentsPlanned )
+                {
+                    shipment.SetupPods();
+                    break;
+                }
+            }
+        }
+
         // active shipments
 
         public HashSet<Shipment> shipmentsPlanned = new HashSet<Shipment>();
@@ -134,38 +181,48 @@ namespace LogisticRim
         {
             base.ExposeData();
 
-            Scribe_Collections.Look( ref interfaces, "interfaces", LookMode.Deep );
+            Scribe_Collections.Look( ref this.interfaces, "interfaces", LookMode.Deep );
 
-            Scribe_Values.Look( ref nextInterfaceID, "nextInterfaceID" );
+            Scribe_Values.Look( ref this.nextInterfaceID, "nextInterfaceID" );
+            Scribe_Values.Look( ref this.nextShipmentID, "nextShipmentID" );
 
-            Scribe_Values.Look( ref ticksLastDeliveryScan, "ticksLastDeliveryScan" );
-            Scribe_Values.Look( ref deliveryScanInterval, "deliveryScanInterval" );
+            Scribe_Values.Look( ref this.ticksLastDeliveryScan, "ticksLastDeliveryScan" );
+            Scribe_Values.Look( ref this.deliveryScanInterval, "deliveryScanInterval" );
 
-            Scribe_Collections.Look( ref shipmentsPlanned, "shipmentsPlanned", LookMode.Deep );
-            Scribe_Collections.Look( ref shipmentsLoading, "shipmentsLoading", LookMode.Deep );
-            Scribe_Collections.Look( ref shipmentsReady, "shipmentsReady", LookMode.Deep );
-            Scribe_Collections.Look( ref shipmentsInTransit, "shipmentsInTransit", LookMode.Deep );
+            Scribe_Collections.Look( ref this.shipmentsPlanned, "shipmentsPlanned", LookMode.Deep );
+            Scribe_Collections.Look( ref this.shipmentsLoading, "shipmentsLoading", LookMode.Deep );
+            Scribe_Collections.Look( ref this.shipmentsReady, "shipmentsReady", LookMode.Deep );
+            Scribe_Collections.Look( ref this.shipmentsInTransit, "shipmentsInTransit", LookMode.Deep );
+
+            //Scribe_Collections.Look( ref this.transporters, "transporters", LookMode.Reference );
         }
 
         private int nextInterfaceID;
+        private int nextShipmentID;
 
         public string GetUniqueLoadID ()
         {
-            return map.GetUniqueLoadID() + "_LogisticComponent";
+            return this.map.GetUniqueLoadID() + "_LogisticComponent";
+        }
+
+        public int GetNextShipmentID ()
+        {
+            return this.nextShipmentID;
         }
 
         public override void MapGenerated ()
         {
             base.MapGenerated();
 
-            nextInterfaceID = 0;
+            this.nextInterfaceID = 0;
+            this.nextShipmentID = 0;
         }
 
         public override void MapRemoved ()
         {
             base.MapRemoved();
 
-            foreach ( var i in interfaces )
+            foreach ( var i in this.interfaces )
             {
                 i.Remove();
             }

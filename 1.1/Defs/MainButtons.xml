@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<Defs>
+
+	<MainButtonDef>
+		<defName>Logistics</defName>
+		<label>logistics</label>
+		<description>Set up logistic interfaces for this map.</description>
+		<tabWindowClass>LogisticRim.MainTabWindow_Logistics</tabWindowClass>
+		<order>59</order>
+	</MainButtonDef>
+
+</Defs>

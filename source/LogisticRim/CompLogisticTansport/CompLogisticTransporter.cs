@@ -79,6 +79,21 @@ namespace LogisticRim
                 && !this.Launchable.AnyInGroupHasAnythingLeftToLoad;
         }
 
+        public bool Available
+        {
+            get => this.shipmentInProgress == null && !this.Launchable.LoadingInProgressOrReadyToLaunch;
+        }
+
+        public int MaxLaunchDistance
+        {
+            get
+            {
+                float maxFuel = this.Launchable.FuelingPortSource.TryGetComp<CompRefuelable>()?.Props.fuelCapacity ?? 0f;
+
+                return CompLaunchable.MaxLaunchDistanceAtFuelLevel( maxFuel );
+            }
+        }
+
         public override void CompTick ()
         {
             if ( this.AllReadyForLaunch )
@@ -106,6 +121,19 @@ namespace LogisticRim
             base.PostExposeData();
 
             Scribe_References.Look( ref this.shipmentInProgress, "shipmentInProgress" );
+        }
+
+        public override void PostSpawnSetup ( bool respawningAfterLoad )
+        {
+            base.PostSpawnSetup( respawningAfterLoad );
+
+            this.Map.GetComponent<LogisticManager>().transporters.Add( this );
+        }
+
+        public override void PostDestroy ( DestroyMode mode, Map previousMap )
+        {
+            base.PostDestroy( mode, previousMap );
+            previousMap.GetComponent<LogisticManager>().transporters.Remove( this );
         }
     }
 }
