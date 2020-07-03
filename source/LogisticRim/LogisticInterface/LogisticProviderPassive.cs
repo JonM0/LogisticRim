@@ -11,27 +11,9 @@ namespace LogisticRim
     {
         public ThingFilter thingFilter = new ThingFilter();
 
-        public FilterMode mode = FilterMode.Whitelist;
-
-        public enum FilterMode
-        {
-            Whitelist,
-            Blacklist
-        }
-
         public bool Allows ( Thing thing )
         {
-            switch ( mode )
-            {
-                case FilterMode.Whitelist:
-                    return thingFilter.Allows( thing );
-
-                case FilterMode.Blacklist:
-                    return !thingFilter.Allows( thing );
-
-                default:
-                    return false;
-            };
+            return thingFilter.Allows( thing );
         }
 
         override public void ExposeData ()
@@ -39,7 +21,6 @@ namespace LogisticRim
             base.ExposeData();
 
             Scribe_Deep.Look( ref thingFilter, "filter" );
-            Scribe_Values.Look( ref mode, "mode" );
         }
     }
 }

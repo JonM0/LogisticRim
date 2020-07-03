@@ -89,12 +89,25 @@
     <Compile Include="LogisticManager.cs" />
     <Compile Include="LogisticInterface\LogisticProviderPassive.cs" />
     <Compile Include="LogisticInterface\LogisticRequester.cs" />
+    <Compile Include="LogisticRimDefOf.cs" />
+    <Compile Include="UI\Dialog_EditRequester.cs" />
+    <Compile Include="UI\Dialog_NewRequester.cs" />
+    <Compile Include="UI\GenericTable\Base\ColumnDef.cs" />
+    <Compile Include="UI\GenericTable\Base\ColumnWorker.cs" />
+    <Compile Include="UI\GenericTable\ColumnWorker_DataGetter.cs" />
+    <Compile Include="UI\GenericTable\Base\TableWidget.cs" />
+    <Compile Include="UI\GenericTable\Base\TableDef.cs" />
     <Compile Include="UI\MainTabWindow_Logistics.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Shipment.cs" />
     <Compile Include="ShipmentItem.cs" />
     <Compile Include="CompLogisticTansport\TransportPodsArrivalAction_FinalizeShipment.cs" />
     <Compile Include="UI\LogWidgets.cs" />
+    <Compile Include="UI\RequesterTable\RequesterColumnWorker_ActiveRequests.cs" />
+    <Compile Include="UI\RequesterTable\RequesterColumnWorker_Remove.cs" />
+    <Compile Include="UI\RequesterTable\RequesterColumnWorker_ReqestAmount.cs" />
+    <Compile Include="UI\RequesterTable\RequesterColumnWorker_Edit.cs" />
+    <Compile Include="UI\RequesterTable\RequesterColumnWorker_ThingLabel.cs" />
   </ItemGroup>
   <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

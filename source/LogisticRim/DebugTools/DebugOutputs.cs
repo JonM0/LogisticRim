@@ -1,8 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using Verse;
 
 namespace LogisticRim.DebugTools
@@ -46,9 +43,9 @@ namespace LogisticRim.DebugTools
                 Manager.Requesters;
 
             TableDataGetter<LogisticRequester>[] array = new TableDataGetter<LogisticRequester>[4];
-            array[0] = new TableDataGetter<LogisticRequester>( "thingDef", ( LogisticRequester r ) => r.ThingDef );
+            array[0] = new TableDataGetter<LogisticRequester>( "thingDef", ( LogisticRequester r ) => r.requestFilter.Summary );
             array[1] = new TableDataGetter<LogisticRequester>( "amount", ( LogisticRequester r ) => r.Count );
-            array[2] = new TableDataGetter<LogisticRequester>( "activeReq", ( LogisticRequester r ) => r.activeRequest );
+            array[2] = new TableDataGetter<LogisticRequester>( "activeReq", ( LogisticRequester r ) => r.activeRequestCount );
             array[3] = new TableDataGetter<LogisticRequester>( "missing", ( LogisticRequester r ) => r.Missing );
 
             DebugTables.MakeTablesDialog( dataSources, array );

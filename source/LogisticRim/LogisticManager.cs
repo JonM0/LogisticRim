@@ -7,7 +7,7 @@ namespace LogisticRim
 {
     public class LogisticManager : MapComponent, ILoadReferenceable
     {
-        public List<LogisticInterface> interfaces = new List<LogisticInterface>();
+        private List<LogisticInterface> interfaces = new List<LogisticInterface>();
 
         public LogisticManager ( Map map ) : base( map )
         {
@@ -15,10 +15,27 @@ namespace LogisticRim
 
         public void AddInterface ( LogisticInterface lInterface )
         {
+            if ( this.interfaces.Contains( lInterface ) )
+            {
+                Log.Error( "[LogisticRim] Tried to add duplicate interface to manager on map: " + this.map.GetUniqueLoadID() );
+                return;
+            }
+            if ( lInterface.manager != null )
+            {
+                Log.Error( "[LogisticRim] Tried to interface belonging to another manager to manager on map: " + this.map.GetUniqueLoadID() );
+                return;
+            }
+
             this.interfaces.Add( lInterface );
             lInterface.manager = this;
 
             lInterface.loadid = this.GetUniqueLoadID() + "_" + (this.nextInterfaceID++);
+        }
+
+        public void RemoveInterface ( LogisticInterface lInterface )
+        {
+            this.interfaces.Remove( lInterface );
+            lInterface.manager = null;
         }
 
         public IEnumerable<LogisticChannel> Channels

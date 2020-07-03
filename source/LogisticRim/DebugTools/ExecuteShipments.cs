@@ -41,7 +41,7 @@ namespace LogisticRim.DebugTools
                             shipment.items;
 
                         TableDataGetter<ShipmentItem>[] array = new TableDataGetter<ShipmentItem>[3];
-                        array[0] = new TableDataGetter<ShipmentItem>( "thingDef", ( ShipmentItem r ) => r.requester.ThingDef );
+                        array[0] = new TableDataGetter<ShipmentItem>( "thingDef", ( ShipmentItem r ) => r.requester.requestFilter.Summary );
                         array[1] = new TableDataGetter<ShipmentItem>( "amount", ( ShipmentItem r ) => r.Count );// thingCounts.Select( tc => tc.Count ).Aggregate( ( a, b ) => a + b ) ) ;
                         array[2] = new TableDataGetter<ShipmentItem>( "requested", ( ShipmentItem r ) => r.reqAmount );
 

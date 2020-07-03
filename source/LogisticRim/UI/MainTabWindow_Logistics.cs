@@ -12,11 +12,43 @@ namespace LogisticRim
 {
     public class MainTabWindow_Logistics : MainTabWindow
     {
-        private Vector2 scrollPosition;
-
         public LogisticManager CurrentManager
         {
             get => Find.CurrentMap.GetComponent<LogisticManager>();
+        }
+
+        protected float ExtraTopSpace => 34f;
+
+        protected float ExtraBottomSpace => 28f;
+
+        protected float LeftPartWidth => 128f;
+
+        private float MaxTableWidth
+        {
+            get
+            {
+                return Mathf.Max( new float[] { this.requesterTable.Size.x, } );
+            }
+        }
+
+        private float MaxTableHeight
+        {
+            get
+            {
+                return Mathf.Max( new float[] { this.requesterTable.Size.y, } );
+            }
+        }
+
+        public override Vector2 RequestedTabSize
+        {
+            get
+            {
+                if ( this.requesterTable == null )
+                {
+                    return Vector2.zero;
+                }
+                return new Vector2( this.MaxTableWidth + this.LeftPartWidth + this.Margin * 3f, this.MaxTableHeight + this.ExtraBottomSpace + this.ExtraTopSpace + this.Margin * 2f );
+            }
         }
 
         public override void DoWindowContents ( Rect inRect )
@@ -25,24 +57,16 @@ namespace LogisticRim
 
             try
             {
-                Rect rect = inRect.ContractedBy( 12f );
-                rect.yMin -= 4f;
-                rect.yMax += 6f;
-                GUI.BeginGroup( rect );
+                Rect leftArea = inRect;
+                leftArea.width = this.LeftPartWidth;
 
-                // title
+                this.DoLeftPart( leftArea );
 
-                Rect titleRect = new Rect( 0f, 0f, rect.width, 40f );
+                Rect tabContentArea = inRect;
+                tabContentArea.xMin += this.LeftPartWidth + this.Margin;
+                tabContentArea.yMin += this.ExtraTopSpace;
 
-                Text.Font = GameFont.Medium;
-                Text.Anchor = TextAnchor.UpperLeft;
-                Widgets.Label( titleRect, "ululu" );
-
-                // table
-
-                Rect listRect = new Rect( 0f, titleRect.height + 6f, rect.width, rect.height );
-
-                this.DoRequesterList( listRect );
+                this.DoTabContent( tabContentArea );
             }
             catch ( Exception ex )
             {
@@ -54,39 +78,104 @@ namespace LogisticRim
             }
         }
 
-        public void DoRequesterList ( Rect inRect )
+        protected void DoLeftPart ( Rect inRect )
         {
-            List<LogisticRequester> requestersForDrawing = this.CurrentManager.Requesters.ToList();
-
-            Text.Font = GameFont.Small;
-
-            GUI.BeginGroup( inRect );
-
-            float height = (float)requestersForDrawing.Count * 24f;
-            float num = 0f;
-            Rect viewRect = new Rect( 0f, 0f, inRect.width - 16f, height );
-            Widgets.BeginScrollView( inRect, ref this.scrollPosition, viewRect, true );
-            float num3 = this.scrollPosition.y - 24f;
-            float num4 = this.scrollPosition.y + inRect.height;
-            for ( int i = 0; i < requestersForDrawing.Count; i++ )
-            {
-                if ( num > num3 && num < num4 )
-                {
-                    LogWidgets.RequesterLabelWithOptions( new Rect( 0f, num, viewRect.width, 24f ), requestersForDrawing[i] );
-                }
-                num += 24f;
-            }
-            Widgets.EndScrollView();
-
-            GUI.EndGroup();
         }
 
-        //private List<TabRecord> tabs = new List<TabRecord>();
+        protected void DoTabContent ( Rect inRect )
+        {
+            Widgets.DrawMenuSection( inRect );
+            TabDrawer.DrawTabs( inRect, this.tabs, 200f );
 
-        //private enum LogisticsTab : byte
-        //{
-        //    Requesters,
-        //    Providers,
-        //}
+            switch ( this.curTab )
+            {
+                case InterfaceTabs.Requesters:
+                    this.DoRequesterTab( inRect );
+                    break;
+
+                case InterfaceTabs.PassiveProviders:
+                    this.DoPassiveProviderTab( inRect );
+                    break;
+            }
+        }
+
+        protected void DoRequesterTab ( Rect inRect )
+        {
+            this.requesterTable.TableOnGUI( inRect.position );
+
+            // footer
+
+            Rect footerSpace = inRect;
+            footerSpace.yMin = footerSpace.yMax - this.ExtraBottomSpace + 2;
+
+            WidgetRow footerWidgets = new WidgetRow( footerSpace.xMin, footerSpace.yMin, UIDirection.RightThenDown, footerSpace.width );
+
+            if ( footerWidgets.ButtonText( "Add request" ) )
+            {
+                LogisticRequester newLogisticRequester = new LogisticRequester( new ThingFilter() );
+
+                this.CurrentManager.AddInterface( newLogisticRequester );
+
+                Find.WindowStack.Add( new Dialog_EditRequester( newLogisticRequester ) );
+
+                this.SetDirty();
+            }
+        }
+
+        protected void DoPassiveProviderTab ( Rect inRect )
+        {
+        }
+
+        private TableWidget<LogisticRequester> requesterTable;
+
+        private TableWidget<LogisticRequester> CreateRequesterTable ()
+        {
+            TableWidget<LogisticRequester> table = new TableWidget<LogisticRequester>(
+                LogWidgets.CreateRequesterTableDef(),
+                new Func<IEnumerable<LogisticRequester>>( () => this.CurrentManager.Requesters ),
+                UI.screenWidth - (int)(this.Margin * 3f + this.LeftPartWidth),
+                (int)((float)(UI.screenHeight - 35) - this.Margin * 2f - this.ExtraTopSpace - this.ExtraBottomSpace) );
+
+            return table;
+        }
+
+        public override void PostOpen ()
+        {
+            if ( this.requesterTable == null )
+            {
+                this.requesterTable = this.CreateRequesterTable();
+            }
+            this.SetDirty();
+        }
+
+        public void SetDirty ()
+        {
+            this.requesterTable.SetDirty();
+            this.SetInitialSizeAndPosition();
+        }
+
+        private List<TabRecord> tabs = new List<TabRecord>();
+        private InterfaceTabs curTab;
+
+        private enum InterfaceTabs : byte
+        {
+            Requesters,
+            PassiveProviders,
+        }
+
+        public override void PreOpen ()
+        {
+            base.PreOpen();
+
+            this.tabs.Clear();
+            this.tabs.Add( new TabRecord( "Requesters", delegate ()
+            {
+                this.curTab = InterfaceTabs.Requesters;
+            }, () => this.curTab == InterfaceTabs.Requesters ) );
+            this.tabs.Add( new TabRecord( "Passive Providers", delegate ()
+            {
+                this.curTab = InterfaceTabs.PassiveProviders;
+            }, () => this.curTab == InterfaceTabs.PassiveProviders ) );
+        }
     }
 }
