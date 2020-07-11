@@ -15,7 +15,7 @@ namespace LogisticRim
             string buffer = entry.Count.ToString();
 
             int tempCount = entry.Count;
-            Widgets.IntEntry( rect, ref tempCount, ref buffer );
+            Widgets.IntEntry( rect.ContractedBy( 1f ), ref tempCount, ref buffer );
             entry.Count = tempCount;
         }
 

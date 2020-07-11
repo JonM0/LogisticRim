@@ -42,5 +42,27 @@ namespace LogisticRim
 
             return tableDef;
         }
+
+        public static TableDef<LogisticProviderPassive> CreatePassiveProviderTableDef ()
+        {
+            ColumnDef<LogisticProviderPassive> filterLabel = new ColumnDef<LogisticProviderPassive>();
+            filterLabel.label = "Provider filter";
+            filterLabel.workerClass = typeof( PassiveProviderColumnWorker_ThingLabel );
+
+            ColumnDef<LogisticProviderPassive> edit = new ColumnDef<LogisticProviderPassive>();
+            edit.headerIcon = "UI/Buttons/Rename";
+            edit.workerClass = typeof( ProviderPassiveColumnWorker_Edit );
+
+            ColumnDef<LogisticProviderPassive> remove = new ColumnDef<LogisticProviderPassive>();
+            remove.workerClass = typeof( ProviderPassiveColumnWorker_Remove );
+
+            TableDef<LogisticProviderPassive> tableDef = new TableDef<LogisticProviderPassive>();
+            tableDef.columns = new List<ColumnDef<LogisticProviderPassive>>()
+            {
+                filterLabel, edit, remove,
+            };
+
+            return tableDef;
+        }
     }
 }

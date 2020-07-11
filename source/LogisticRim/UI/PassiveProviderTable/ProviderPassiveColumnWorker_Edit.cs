@@ -9,13 +9,13 @@ using RimWorld;
 
 namespace LogisticRim
 {
-    internal class RequesterColumnWorker_Edit : ColumnWorker<LogisticRequester>
+    internal class ProviderPassiveColumnWorker_Edit : ColumnWorker<LogisticProviderPassive>
     {
-        public override void DoCell ( Rect rect, LogisticRequester entry, TableWidget<LogisticRequester> table )
+        public override void DoCell ( Rect rect, LogisticProviderPassive entry, TableWidget<LogisticProviderPassive> table )
         {
             if ( Widgets.ButtonText( rect.ContractedBy( 1f ), "Edit" ) )
             {
-                Find.WindowStack.Add( new Dialog_EditRequester( entry ) );
+                Find.WindowStack.Add( new Dialog_EditProviderPassive( entry ) );
             }
         }
     }

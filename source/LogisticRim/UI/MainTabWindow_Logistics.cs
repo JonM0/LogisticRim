@@ -19,15 +19,17 @@ namespace LogisticRim
 
         protected float ExtraTopSpace => 34f;
 
-        protected float ExtraBottomSpace => 28f;
+        protected float TableFooterHeight => 34f;
 
-        protected float LeftPartWidth => 128f;
+        protected float LeftPartWidth => 512f;
+
+        protected float TableMargin => this.Margin / 2f;
 
         private float MaxTableWidth
         {
             get
             {
-                return Mathf.Max( new float[] { this.requesterTable.Size.x, } );
+                return Mathf.Max( new float[] { this.requesterTable.Size.x, this.passiveProviderTable.Size.x, } );
             }
         }
 
@@ -35,7 +37,7 @@ namespace LogisticRim
         {
             get
             {
-                return Mathf.Max( new float[] { this.requesterTable.Size.y, } );
+                return Mathf.Max( new float[] { this.requesterTable.Size.y, this.passiveProviderTable.Size.y, } );
             }
         }
 
@@ -47,7 +49,9 @@ namespace LogisticRim
                 {
                     return Vector2.zero;
                 }
-                return new Vector2( this.MaxTableWidth + this.LeftPartWidth + this.Margin * 3f, this.MaxTableHeight + this.ExtraBottomSpace + this.ExtraTopSpace + this.Margin * 2f );
+                return new Vector2(
+                    this.MaxTableWidth + this.LeftPartWidth + this.Margin * 3f + this.TableMargin * 2f,
+                    this.MaxTableHeight + this.TableFooterHeight + this.ExtraTopSpace + this.Margin * 2f + this.TableMargin * 3f );
             }
         }
 
@@ -63,7 +67,7 @@ namespace LogisticRim
                 this.DoLeftPart( leftArea );
 
                 Rect tabContentArea = inRect;
-                tabContentArea.xMin += this.LeftPartWidth + this.Margin;
+                tabContentArea.xMin = leftArea.xMax + this.Margin;
                 tabContentArea.yMin += this.ExtraTopSpace;
 
                 this.DoTabContent( tabContentArea );
@@ -85,16 +89,16 @@ namespace LogisticRim
         protected void DoTabContent ( Rect inRect )
         {
             Widgets.DrawMenuSection( inRect );
-            TabDrawer.DrawTabs( inRect, this.tabs, 200f );
+            TabDrawer.DrawTabs( inRect, this.tabs, 198f );
 
             switch ( this.curTab )
             {
                 case InterfaceTabs.Requesters:
-                    this.DoRequesterTab( inRect );
+                    this.DoRequesterTab( inRect.ContractedBy( this.TableMargin ) );
                     break;
 
                 case InterfaceTabs.PassiveProviders:
-                    this.DoPassiveProviderTab( inRect );
+                    this.DoPassiveProviderTab( inRect.ContractedBy( this.TableMargin ) );
                     break;
             }
         }
@@ -106,7 +110,7 @@ namespace LogisticRim
             // footer
 
             Rect footerSpace = inRect;
-            footerSpace.yMin = footerSpace.yMax - this.ExtraBottomSpace + 2;
+            footerSpace.yMin = footerSpace.yMax - this.TableFooterHeight + this.TableMargin;
 
             WidgetRow footerWidgets = new WidgetRow( footerSpace.xMin, footerSpace.yMin, UIDirection.RightThenDown, footerSpace.width );
 
@@ -124,7 +128,30 @@ namespace LogisticRim
 
         protected void DoPassiveProviderTab ( Rect inRect )
         {
+            this.passiveProviderTable.TableOnGUI( inRect.position );
+
+            // footer
+
+            Rect footerSpace = inRect;
+            footerSpace.yMin = footerSpace.yMax - this.TableFooterHeight + this.TableMargin;
+
+            WidgetRow footerWidgets = new WidgetRow( footerSpace.xMin, footerSpace.yMin, UIDirection.RightThenDown, footerSpace.width );
+
+            if ( footerWidgets.ButtonText( "Add provider" ) )
+            {
+                LogisticProviderPassive newLogisticProviderPassive = new LogisticProviderPassive();
+
+                this.CurrentManager.AddInterface( newLogisticProviderPassive );
+
+                Find.WindowStack.Add( new Dialog_EditProviderPassive( newLogisticProviderPassive ) );
+
+                this.SetDirty();
+            }
         }
+
+        protected Vector2Int MaxTableSize => new Vector2Int(
+            UI.screenWidth - (int)(this.Margin * 3f + this.LeftPartWidth + this.TableMargin * 2f),
+            (int)((float)(UI.screenHeight - 35) - this.Margin * 2f - this.ExtraTopSpace - this.TableFooterHeight - this.TableMargin * 3f) );
 
         private TableWidget<LogisticRequester> requesterTable;
 
@@ -132,9 +159,22 @@ namespace LogisticRim
         {
             TableWidget<LogisticRequester> table = new TableWidget<LogisticRequester>(
                 LogWidgets.CreateRequesterTableDef(),
-                new Func<IEnumerable<LogisticRequester>>( () => this.CurrentManager.Requesters ),
-                UI.screenWidth - (int)(this.Margin * 3f + this.LeftPartWidth),
-                (int)((float)(UI.screenHeight - 35) - this.Margin * 2f - this.ExtraTopSpace - this.ExtraBottomSpace) );
+                () => this.CurrentManager.Requesters,
+                this.MaxTableSize.x,
+                this.MaxTableSize.y );
+
+            return table;
+        }
+
+        private TableWidget<LogisticProviderPassive> passiveProviderTable;
+
+        private TableWidget<LogisticProviderPassive> CreatePassiveProviderTable ()
+        {
+            TableWidget<LogisticProviderPassive> table = new TableWidget<LogisticProviderPassive>(
+                LogWidgets.CreatePassiveProviderTableDef(),
+                () => this.CurrentManager.PassiveProviders,
+                this.MaxTableSize.x,
+                this.MaxTableSize.y );
 
             return table;
         }
@@ -145,12 +185,17 @@ namespace LogisticRim
             {
                 this.requesterTable = this.CreateRequesterTable();
             }
+            if ( this.passiveProviderTable == null )
+            {
+                this.passiveProviderTable = this.CreatePassiveProviderTable();
+            }
             this.SetDirty();
         }
 
         public void SetDirty ()
         {
             this.requesterTable.SetDirty();
+            this.passiveProviderTable.SetDirty();
             this.SetInitialSizeAndPosition();
         }
 
@@ -168,14 +213,12 @@ namespace LogisticRim
             base.PreOpen();
 
             this.tabs.Clear();
-            this.tabs.Add( new TabRecord( "Requesters", delegate ()
-            {
-                this.curTab = InterfaceTabs.Requesters;
-            }, () => this.curTab == InterfaceTabs.Requesters ) );
-            this.tabs.Add( new TabRecord( "Passive Providers", delegate ()
-            {
-                this.curTab = InterfaceTabs.PassiveProviders;
-            }, () => this.curTab == InterfaceTabs.PassiveProviders ) );
+            this.tabs.Add( new TabRecord( "Requesters",
+                () => this.curTab = InterfaceTabs.Requesters,
+                () => this.curTab == InterfaceTabs.Requesters ) );
+            this.tabs.Add( new TabRecord( "Passive Providers",
+                () => this.curTab = InterfaceTabs.PassiveProviders,
+                () => this.curTab == InterfaceTabs.PassiveProviders ) );
         }
     }
 }

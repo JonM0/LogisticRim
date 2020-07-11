@@ -90,6 +90,7 @@
     <Compile Include="LogisticInterface\LogisticProviderPassive.cs" />
     <Compile Include="LogisticInterface\LogisticRequester.cs" />
     <Compile Include="LogisticRimDefOf.cs" />
+    <Compile Include="UI\Dialog_EditProviderPassive.cs" />
     <Compile Include="UI\Dialog_EditRequester.cs" />
     <Compile Include="UI\Dialog_NewRequester.cs" />
     <Compile Include="UI\GenericTable\Base\ColumnDef.cs" />
@@ -103,6 +104,9 @@
     <Compile Include="ShipmentItem.cs" />
     <Compile Include="CompLogisticTansport\TransportPodsArrivalAction_FinalizeShipment.cs" />
     <Compile Include="UI\LogWidgets.cs" />
+    <Compile Include="UI\PassiveProviderTable\ProviderPassiveColumnWorker_Edit.cs" />
+    <Compile Include="UI\PassiveProviderTable\ProviderPassiveColumnWorker_Remove.cs" />
+    <Compile Include="UI\PassiveProviderTable\ProviderPassiveColumnWorker_ThingLabel.cs" />
     <Compile Include="UI\RequesterTable\RequesterColumnWorker_ActiveRequests.cs" />
     <Compile Include="UI\RequesterTable\RequesterColumnWorker_Remove.cs" />
     <Compile Include="UI\RequesterTable\RequesterColumnWorker_ReqestAmount.cs" />
