@@ -13,6 +13,7 @@ namespace LogisticRim
 
         public int totalRequestCount;
         public int activeRequestCount;
+        public int urgencyThreshold;
 
         public LogisticRequester ( ThingFilter filter, int count = 0 )
         {
@@ -99,9 +100,9 @@ namespace LogisticRim
             return this.requestFilter.Allows( thing );
         }
 
-        public ShipmentItem CreateShipment ( LogisticManager sender )
+        public ShipmentItem CreateShipmentItem ( LogisticManager sender )
         {
-            return new ShipmentItem( this, sender, this.activeRequestCount );
+            return new ShipmentItem( this, sender );
         }
 
         override public void ExposeData ()
@@ -111,68 +112,7 @@ namespace LogisticRim
             Scribe_Deep.Look( ref this.requestFilter, "requestFilter" );
             Scribe_Values.Look( ref this.totalRequestCount, "totalRequestCount", 0 );
             Scribe_Values.Look( ref this.activeRequestCount, "activeRequest", 0 );
+            Scribe_Values.Look( ref this.urgencyThreshold, "urgencyThreshold", 0 );
         }
-
-        //private string UIbuffer;
-
-        //public void DoListEntry ( Rect rect )
-        //{
-        //    Def def = this.ThingDef;
-
-        //    Widgets.DrawLineHorizontal( rect.x, rect.y, rect.width );
-        //    Widgets.DrawHighlightIfMouseover( rect );
-        //    TooltipHandler.TipRegion( rect, def.description );
-
-        //    GUI.BeginGroup( rect );
-
-        //    // icon
-
-        //    Rect iconRect = new Rect( 0f, 0f, rect.height, rect.height );
-        //    iconRect = iconRect.ContractedBy( 2f );
-        //    Widgets.DefIcon( iconRect, def, null, 1f, true );
-
-        //    // buttons
-
-        //    float buttonSize = rect.height - 2f;
-        //    Rect buttonRect = new Rect( rect.width - buttonSize - 1f, 1f, buttonSize, buttonSize );
-
-        //    //  delete
-        //    if ( Widgets.ButtonImage( buttonRect, LogWidgets.DeleteXIcon, Color.white, GenUI.SubtleMouseoverColor ) )
-        //    {
-        //        this.Remove();
-        //    }
-
-        //    // edit
-
-        //    Widgets.TextFieldNumeric( new Rect( rect.width / 2f, 0f, 256f, rect.height ), ref this.request.count, ref this.UIbuffer );
-
-        //    //buttonRect.x -= buttonSize + 2f;
-        //    //if ( Widgets.ButtonImage( buttonRect, EditIcon ) )
-        //    //{
-        //    //    Find.WindowStack.Add(
-        //    //        new Dialog_Slider(
-        //    //            n => logisticRequester.ThingDef.defName + ": " + n,
-        //    //            0, 1500,
-        //    //            n => logisticRequester.Count = n,
-        //    //            logisticRequester.Count ) );
-        //    //}
-
-        //    // slider
-        //    //float sliderWidth = 248f;
-        //    //Rect sliderRect = new Rect( buttonRect.x - sliderWidth - 2f, 0, sliderWidth, rect.height );
-
-        //    //logisticRequester.Count = (int)Widgets.HorizontalSlider( sliderRect, logisticRequester.Count, 0, 2000 );
-
-        //    // label
-
-        //    Rect rect3 = new Rect( iconRect.xMax + 6f, 0f, rect.width, rect.height );
-        //    Text.Anchor = TextAnchor.MiddleLeft;
-        //    Text.WordWrap = false;
-        //    Widgets.Label( rect3, def.LabelCap );
-        //    Text.Anchor = TextAnchor.UpperLeft;
-        //    Text.WordWrap = true;
-
-        //    GUI.EndGroup();
-        //}
     }
 }

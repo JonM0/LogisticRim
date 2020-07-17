@@ -19,6 +19,7 @@ namespace LogisticRim
 
         public TransferableOneWay transferableThings = new TransferableOneWay();
         public int reqAmount;
+        public int urgencyThreshold;
 
         public int Count => this.transferableThings.CountToTransfer;
 
@@ -45,13 +46,16 @@ namespace LogisticRim
 
             Scribe_Deep.Look( ref transferableThings, "transferableThings" );
             Scribe_Values.Look( ref reqAmount, "reqAmount" );
+            Scribe_Values.Look( ref urgencyThreshold, "urgencyThreshold" );
         }
 
-        public ShipmentItem ( LogisticRequester requester, LogisticManager sender, int amount )
+        public ShipmentItem ( LogisticRequester requester, LogisticManager sender )
         {
             this.requester = requester;
             this.sender = sender;
-            this.reqAmount = amount;
+
+            this.reqAmount = requester.activeRequestCount;
+            this.urgencyThreshold = requester.urgencyThreshold;
         }
 
         public bool Empty => this.Count == 0;

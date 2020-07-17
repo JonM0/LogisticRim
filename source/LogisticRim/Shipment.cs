@@ -16,6 +16,8 @@ namespace LogisticRim
         {
         }
 
+        public IEnumerable<TransferableOneWay> Transferables => items.Select( t => t.transferableThings );
+
         public Shipment ( LogisticManager destination, LogisticManager sender, LogisticChannel channel )
         {
             this.destination = destination;
@@ -48,7 +50,7 @@ namespace LogisticRim
                 return;
             }
 
-            List<TransferableOneWay> transferables = items.Select( t => t.transferableThings ).ToList();
+            List<TransferableOneWay> transferables = this.Transferables.ToList();
 
             // find transporters
 

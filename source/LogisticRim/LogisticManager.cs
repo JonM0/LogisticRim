@@ -100,6 +100,13 @@ namespace LogisticRim
 
         // shipment generation
 
+        public float OutgoingShipmentTargetMass
+        {
+            get => this.AvailableTransporters.FirstOrDefault()?.Transporter.Props.massCapacity ?? 0f;
+        }
+
+        public float minimumPodFill = 0.8f;
+
         public long ticksLastDeliveryScan = 0;
         public long deliveryScanInterval = 1200;
 
@@ -139,7 +146,7 @@ namespace LogisticRim
                 {
                     Log.Message( "generating shipments for map " + reqGroup.Key.map.GetUniqueLoadID() );
 
-                    Shipment shipment = reqGroup.Key.GenerateRequest( this, channel );
+                    Shipment shipment = reqGroup.Key.GenerateIncomingShipment( this, channel );
 
                     if ( shipment != null )
                     {
@@ -149,13 +156,13 @@ namespace LogisticRim
             }
         }
 
-        public Shipment GenerateRequest ( LogisticManager sender, LogisticChannel channel )
+        public Shipment GenerateIncomingShipment ( LogisticManager sender, LogisticChannel channel )
         {
             Shipment shipment = new Shipment( this, sender, channel );
 
             foreach ( LogisticRequester requester in this.Requesters.Where( x => x.channel == channel ) )
             {
-                var item = requester.CreateShipment( sender );
+                var item = requester.CreateShipmentItem( sender );
                 if ( item.reqAmount > 0 )
                     shipment.items.Add( item );
             }
@@ -205,6 +212,7 @@ namespace LogisticRim
 
             Scribe_Values.Look( ref this.ticksLastDeliveryScan, "ticksLastDeliveryScan" );
             Scribe_Values.Look( ref this.deliveryScanInterval, "deliveryScanInterval" );
+            Scribe_Values.Look( ref this.minimumPodFill, "minimumPodFill" );
 
             Scribe_Collections.Look( ref this.shipmentsPlanned, "shipmentsPlanned", LookMode.Deep );
             Scribe_Collections.Look( ref this.shipmentsLoading, "shipmentsLoading", LookMode.Deep );
